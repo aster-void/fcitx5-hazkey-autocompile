@@ -10,7 +10,9 @@ timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
 [[ -f "$dist/.gitkeep" ]] && rm -f "$dist/.gitkeep"
 
 find "$dist" -maxdepth 1 -type f -name 'fcitx5-hazkey-*.tar.gz' -not -name 'fcitx5-hazkey.tar.gz' -delete
-[[ ! -f "$latest" || ! cmp -s "$pkg" "$latest" ]] && cp "$pkg" "$latest"
+if [[ ! -f "$latest" ]] || ! cmp -s "$pkg" "$latest"; then
+  cp "$pkg" "$latest"
+fi
 
 tmp="$manifest.tmp"
 cat <<EOF >"$tmp"
