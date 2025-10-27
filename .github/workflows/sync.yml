@@ -1,0 +1,26 @@
+name: Sync Build
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Clone upstream
+        run: ./scripts/bootstrap.sh
+      - name: Build package
+        run: ./scripts/build.sh
+      - name: Publish artifacts
+        run: ./scripts/publish.sh
+      - name: Commit changes
+        run: ./scripts/commit.sh
