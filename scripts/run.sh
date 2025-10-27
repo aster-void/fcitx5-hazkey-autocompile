@@ -64,9 +64,15 @@ if [[ -f "$manifest" ]]; then
 fi
 echo "Upstream head: $sha"
 [[ -n "$current" ]] && echo "Last built : $current"
-if [[ -n "$current" && "$current" == "$sha" && -f "$latest" && "$(basename "$latest")" == "$expected_package" ]]; then
-  echo "No upstream change detected; skipping build."
-  exit 0
+if [[ -n "$current" && "$current" == "$sha" ]]; then
+  if [[ ! -f "$latest" ]]; then
+    echo "Expected package $latest missing; forcing rebuild."
+  elif [[ -n "$expected_package" && "$(basename "$latest")" != "$expected_package" ]]; then
+    echo "Manifest expects $expected_package but found $(basename "$latest"); forcing rebuild."
+  else
+    echo "No upstream change detected; skipping build."
+    exit 0
+  fi
 fi
 
 if [[ "$apt_updated" -eq 0 ]]; then

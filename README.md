@@ -9,7 +9,7 @@ Automated mirror that compiles [fcitx5-hazkey](https://github.com/7ka-Hiira/fcit
 
 ## Usage
 
-Run `Sync Build` workflow manually or wait for the scheduled trigger. The workflow shells into `scripts/run.sh` to:
+Run `Sync Build` workflow manually or wait for the scheduled trigger. The workflow runs on GitHub's `ubuntu-24.04` image and shells into `scripts/run.sh` to:
 
 1. Clone the upstream repository (fresh each run).
 2. Rebuild only when `dist/latest.json` doesn’t match the upstream SHA.
