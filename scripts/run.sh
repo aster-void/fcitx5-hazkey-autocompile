@@ -13,6 +13,7 @@ dist="$root/dist"
 pkg="$pack_dir/fcitx5-hazkey.tar.gz"
 latest="$dist/fcitx5-hazkey.tar.gz"
 manifest="$dist/latest.json"
+apt_updated=0
 packages=(
   build-essential
   cmake
@@ -25,6 +26,7 @@ packages=(
   libfcitx5core-dev
   libfcitx5config-dev
   libfcitx5utils-dev
+  jq
   ninja-build
   qt6-base-dev
   qt6-tools-dev
@@ -38,6 +40,15 @@ packages=(
   wget
 )
 
+ensure_jq() {
+  if command -v jq >/dev/null 2>&1; then
+    return
+  fi
+  sudo apt-get update -y
+  apt_updated=1
+  sudo apt-get install -y jq
+}
+
 mkdir -p "$work"
 rm -rf "$upstream"
 git clone --depth 1 --recurse-submodules "$repo" "$upstream"
@@ -45,17 +56,22 @@ git -C "$upstream" rev-parse HEAD >"$sha_file"
 sha="$(<"$sha_file")"
 
 current=""
+expected_package=""
 if [[ -f "$manifest" ]]; then
-  current="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("upstream",""))' <"$manifest")"
+  ensure_jq
+  current="$(jq -r '.upstream // ""' "$manifest")"
+  expected_package="$(jq -r '.package // ""' "$manifest")"
 fi
 echo "Upstream head: $sha"
 [[ -n "$current" ]] && echo "Last built : $current"
-if [[ -n "$current" && "$current" == "$sha" ]]; then
+if [[ -n "$current" && "$current" == "$sha" && -f "$latest" && "$(basename "$latest")" == "$expected_package" ]]; then
   echo "No upstream change detected; skipping build."
   exit 0
 fi
 
-sudo apt-get update -y
+if [[ "$apt_updated" -eq 0 ]]; then
+  sudo apt-get update -y
+fi
 sudo apt-get install -y "${packages[@]}"
 sudo apt-get install -y --only-upgrade "${packages[@]}"
 if [[ ! -d /usr/share/swift/usr/bin ]]; then
