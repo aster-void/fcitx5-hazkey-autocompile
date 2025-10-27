@@ -18,9 +18,15 @@ jobs:
           fetch-depth: 0
       - name: Clone upstream
         run: ./scripts/bootstrap.sh
+      - name: Check upstream revision
+        id: gate
+        run: ./scripts/check-upstream.sh
       - name: Build package
+        if: steps.gate.outputs.changed == 'true'
         run: ./scripts/build.sh
       - name: Publish artifacts
+        if: steps.gate.outputs.changed == 'true'
         run: ./scripts/publish.sh
       - name: Commit changes
+        if: steps.gate.outputs.changed == 'true'
         run: ./scripts/commit.sh

@@ -5,7 +5,7 @@ Automated mirror that compiles [fcitx5-hazkey](https://github.com/7ka-Hiira/fcit
 ## Layout
 
 - `scripts/`: workflow helpers for cloning, building, and publishing.
-- `dist/`: tracked build artifacts keyed by upstream commit. Populated by CI.
+- `dist/`: contains the most recent build artifact and metadata. Populated by CI.
 
 ## Usage
 
@@ -13,6 +13,10 @@ Run `Sync Build` workflow manually or wait for the scheduled trigger. The workfl
 
 1. Clones the upstream repository.
 2. Replays its official build pipeline inside CI.
-3. Publishes a tarball plus metadata when the upstream commit is new.
+3. Publishes the latest tarball plus metadata when the upstream commit is new.
+
+If the upstream head matches the revision recorded in `dist/latest.json`, the workflow exits early without rebuilding.
+
+The latest build is always available as `dist/fcitx5-hazkey.tar.gz`, replacing the previous artifact on each update.
 
 All outputs are committed back to the default branch using the GitHub Actions token.
