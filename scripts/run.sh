@@ -13,6 +13,30 @@ dist="$root/dist"
 pkg="$pack_dir/fcitx5-hazkey.tar.gz"
 latest="$dist/fcitx5-hazkey.tar.gz"
 manifest="$dist/latest.json"
+packages=(
+  build-essential
+  cmake
+  gettext
+  fakeroot
+  protobuf-compiler
+  libprotobuf-dev
+  libprotoc-dev
+  libabsl-dev
+  libfcitx5core-dev
+  libfcitx5config-dev
+  libfcitx5utils-dev
+  ninja-build
+  qt6-base-dev
+  qt6-tools-dev
+  qt6-tools-dev-tools
+  libqt6widgets6
+  libqt6gui6
+  qt6-l10n-tools
+  libglx-dev
+  libgl1-mesa-dev
+  libxkbcommon-dev
+  wget
+)
 
 mkdir -p "$work"
 rm -rf "$upstream"
@@ -32,11 +56,8 @@ if [[ -n "$current" && "$current" == "$sha" ]]; then
 fi
 
 sudo apt-get update -y
-sudo apt-get install -y build-essential cmake gettext fakeroot protobuf-compiler \
-  libprotobuf-dev libprotoc-dev libabsl-dev libfcitx5core-dev \
-  libfcitx5config-dev libfcitx5utils-dev ninja-build qt6-base-dev qt6-tools-dev \
-  qt6-tools-dev-tools libqt6widgets6 libqt6gui6 qt6-l10n-tools libglx-dev \
-  libgl1-mesa-dev libxkbcommon-dev wget
+sudo apt-get install -y "${packages[@]}"
+sudo apt-get install -y --only-upgrade "${packages[@]}"
 if [[ ! -d /usr/share/swift/usr/bin ]]; then
   wget -q https://download.swift.org/swift-6.2-release/ubuntu2204/swift-6.2-RELEASE/swift-6.2-RELEASE-ubuntu22.04.tar.gz
   tar xf swift-6.2-RELEASE-ubuntu22.04.tar.gz
