@@ -2,10 +2,13 @@
 set -euo pipefail
 
 repo="${1:-https://github.com/7ka-Hiira/fcitx5-hazkey.git}"
+llama_repo="https://github.com/azooKey/llama.cpp"
 root="$(git rev-parse --show-toplevel)"
 work="$root/work"
 upstream="$work/upstream"
 sha_file="$work/upstream.sha"
+llama_src="$work/llama.cpp"
+llama_sha_file="$work/llama.sha"
 build_dir="$work/build"
 dest_dir="$work/workdir"
 pack_dir="$work/packages"
@@ -54,17 +57,25 @@ rm -rf "$upstream"
 git clone --depth 1 --recurse-submodules "$repo" "$upstream"
 git -C "$upstream" rev-parse HEAD >"$sha_file"
 sha="$(<"$sha_file")"
+rm -rf "$llama_src"
+git clone --depth 1 --recurse-submodules "$llama_repo" "$llama_src"
+git -C "$llama_src" rev-parse HEAD >"$llama_sha_file"
+llama_sha="$(<"$llama_sha_file")"
 
 current=""
 expected_package=""
+current_llama=""
 if [[ -f "$manifest" ]]; then
   ensure_jq
   current="$(jq -r '.upstream // ""' "$manifest")"
   expected_package="$(jq -r '.package // ""' "$manifest")"
+  current_llama="$(jq -r '.llama // ""' "$manifest")"
 fi
 echo "Upstream head: $sha"
 [[ -n "$current" ]] && echo "Last built : $current"
-if [[ -n "$current" && "$current" == "$sha" ]]; then
+echo "llama.cpp head: $llama_sha"
+[[ -n "$current_llama" ]] && echo "Last llama: $current_llama"
+if [[ -n "$current" && "$current" == "$sha" && "$current_llama" == "$llama_sha" ]]; then
   if [[ ! -f "$latest" ]]; then
     echo "Expected package $latest missing; forcing rebuild."
   elif [[ -n "$expected_package" && "$(basename "$latest")" != "$expected_package" ]]; then
@@ -95,6 +106,14 @@ for comp in hazkey-server hazkey-settings fcitx5-hazkey; do
   ninja -C "$build_dir/$comp" -j"$(nproc)"
   DESTDIR="$dest_dir" ninja -C "$build_dir/$comp" install
 done
+cmake -S "$llama_src" -B "$build_dir/llama.cpp" \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=/usr \
+  -DLLAMA_BUILD_TESTS=OFF \
+  -DLLAMA_BUILD_SERVER=OFF \
+  -G Ninja
+ninja -C "$build_dir/llama.cpp" -j"$(nproc)"
+DESTDIR="$dest_dir" ninja -C "$build_dir/llama.cpp" install
 tar -czf "$pkg" -C "$dest_dir" usr
 
 mkdir -p "$dist"
@@ -107,6 +126,7 @@ tmp="$manifest.tmp"
 cat <<EOF >"$tmp"
 {
   "upstream": "$sha",
+  "llama": "$llama_sha",
   "package": "$(basename "$latest")",
   "built_at": "$timestamp"
 }
@@ -124,5 +144,5 @@ if git -C "$root" diff --quiet -- dist; then
   exit 0
 fi
 git -C "$root" add dist
-git -C "$root" commit -m "chore: update fcitx5-hazkey build ($sha)"
+git -C "$root" commit -m "chore: update builds (fcitx5-hazkey $sha, llama $llama_sha)"
 git -C "$root" push
