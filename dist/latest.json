@@ -1,6 +1,6 @@
 {
-  "upstream": "004afc6c0b6dc040dd442406b23d6f8566fedae1",
+  "upstream": "e8b9eff25a3af9241c11764e5aee5e40dc212506",
   "llama": "88b97a47dc7f5892e2d5a6856fbe9cfe237f9e5c",
   "package": "fcitx5-hazkey.tar.gz",
-  "built_at": "2025-11-04T15:19:17Z"
+  "built_at": "2025-11-05T15:17:28Z"
 }
